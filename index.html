@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Smart Summarizer | AppletLogic</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .app-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Left Header */
+        .sidebar {
+            background: linear-gradient(180deg, #007bff, #0056b3);
+            color: #fff;
+            width: 240px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+.logoIm{
+        width: 160px;
+            height: 90px;
+}
+        .logo {
+            width: 160px;
+            height: 90px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar h2 {
+            margin: 0 0 10px;
+            font-size: 20px;
+        }
+
+        .sidebar p {
+            font-size: 13px;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 26px;
+            color: #222;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            padding: 5px;
+            font-size: 14px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            resize: none;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        textarea:focus {
+            border-color: #007bff;
+        }
+
+        .word-count {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #555;
+            text-align: right;
+        }
+
+        button {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0,123,255,0.4);
+        }
+
+        #output {
+            background: #f4f6f8;
+            padding: 16px;
+            margin-top: 20px;
+            border-radius: 10px;
+            min-height: 100px;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 10px;
+        }
+
+        .highlight {
+            color: #007bff;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div>
+            <div class="logo">
+                <img class="logoIm" src="./logo.png" alt="">
+                           </div>
+            <h2>AppletLogic</h2>
+            <p>
+                AI-powered tools for smarter learning, content analysis,
+                and productivity.
+            </p>
+        </div>
+        <p>
+            Engine powered by<br>
+            <strong>LLaMA-3.1-8B-Instant</strong>
+        </p>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main">
+        <h1>AI Article Summarizer</h1>
+
+        <textarea id="inputText" placeholder="Paste your long article here (max 3500 words)..."></textarea>
+        <div class="word-count">
+            <span id="wordCount">0</span> / 3500 words
+        </div>
+
+        <button onclick="getSummary()">Summarize Now</button>
+
+        <div id="output">Summary will appear here...</div>
+
+        <div class="footer">
+            This summarization engine is provided by
+            <span class="highlight">AppletLogic</span> using
+            <span class="highlight">LLaMA-3.1-8B-Instant</span> model.
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const textarea = document.getElementById('inputText');
+    const wordCountEl = document.getElementById('wordCount');
+    const MAX_WORDS = 3500;
+
+    textarea.addEventListener('input', () => {
+        let words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0);
+        if (words.length > MAX_WORDS) {
+            textarea.value = words.slice(0, MAX_WORDS).join(" ");
+            words = words.slice(0, MAX_WORDS);
+        }
+        wordCountEl.innerText = words.length;
+    });
+
+    async function getSummary() {
+        const text = textarea.value;
+        const output = document.getElementById('output');
+
+        if (!text.trim()) {
+            output.innerText = "Please paste some text to summarize.";
+            return;
+        }
+
+        output.innerText = "Processing… Please wait ⏳";
+
+        try {
+            const response = await fetch('http://localhost:8000/summarize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            const data = await response.json();
+            output.innerText = data.summary || "No summary received.";
+        } catch (err) {
+            output.innerText = "Error connecting to the summarization engine.";
+        }
+    }
+</script>
+
+</body>
+</html>
